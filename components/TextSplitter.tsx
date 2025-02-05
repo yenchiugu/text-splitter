@@ -5,6 +5,7 @@ import { Language, Translations, MarkdownSettings, PageNumberSettings, WidthType
 import { getTranslation, getInitialLanguage, LANGUAGES } from '@/lib/i18n';
 import SplitResult from './SplitResult';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import EmojiPicker from 'emoji-picker-react';
 
 // Maximum character limit for Threads platform
 const THREADS_MAX_LENGTH = 500;
@@ -114,11 +115,29 @@ function calcPrefixLength(total: number): number {
   return 4 + 2 * digits;
 }
 
+// 修改 BULLET_OPTIONS 的順序，將 🔹 放在第一位
+const BULLET_OPTIONS = ['🔹', '•', '▪', '▫', '‣', '►', '▸', '➢', '➣'];
+
+const CIRCLED_NUMBERS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
+const PARENTHESIZED_NUMBERS = ['⑴', '⑵', '⑶', '⑷', '⑸', '⑹', '⑺', '⑻', '⑼', '⑽'];
+
+// 新增常數
+const THREADS_WIDTH = 542.4;
+
 const DEFAULT_MARKDOWN_SETTINGS: MarkdownSettings = {
-  h1: '🔊',
-  h2: '🔉',
-  h3: '🔈',
-  list: '🔹',
+  headings: {
+    h1: { left: '【', right: '】', useLeft: false },
+    h2: { left: '《', right: '》', useLeft: false },
+    h3: { left: '『', right: '』', useLeft: false },
+  },
+  emphasis: {
+    bold: { left: ' "', right: '"', useLeft: false },
+    italic: { left: '`', right: '`', useLeft: true },
+  },
+  list: {
+    bullet: '🔹',  // 預設使用 🔹
+    numberStyle: 'circled',  // 預設使用圓圈數字
+  },
   headingNewline: true,
 };
 
@@ -127,9 +146,6 @@ const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
   position: 'bottom',
   newlineCount: 2, // 預設兩個換行符號
 };
-
-// 新增常數
-const THREADS_WIDTH = 542.4;
 
 /**
  * TextSplitter Component
@@ -152,15 +168,13 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
   });
   const [removeReferences, setRemoveReferences] = useState(true);
   const [convertMarkdown, setConvertMarkdown] = useState(true);
-  const [markdownSettings, setMarkdownSettings] = useState<MarkdownSettings>({
-    ...DEFAULT_MARKDOWN_SETTINGS,
-    headingNewline: true,
-  });
+  const [markdownSettings, setMarkdownSettings] = useState<MarkdownSettings>(DEFAULT_MARKDOWN_SETTINGS);
   const [pageNumberSettings, setPageNumberSettings] = useState<PageNumberSettings>(DEFAULT_PAGE_NUMBER_SETTINGS);
   const [widthSetting, setWidthSetting] = useState<WidthSetting>({
     type: 'threads'
   });
   const [countCJKAsTwo, setCountCJKAsTwo] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // 計算當前寬度
   const currentWidth = widthSetting.type === 'threads' 
@@ -177,22 +191,78 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
   // Markdown 轉換函數
   const convertMarkdownToEmoji = (text: string): string => {
     if (!convertMarkdown) return text;
-
     let result = text;
     
-    // 處理標題，根據設定決定是否加入換行
+    // 處理標題
     const newline = markdownSettings.headingNewline ? '\n' : '';
-    result = result.replace(/^# (.+)$/gm, `${markdownSettings.h1}$1${newline}`);
-    result = result.replace(/^## (.+)$/gm, `${markdownSettings.h2}$1${newline}`);
-    result = result.replace(/^### (.+)$/gm, `${markdownSettings.h3}$1${newline}`);
+    const { headings } = markdownSettings;
+    
+    // 修正標題的正則表達式
+    result = result.replace(/^# (.+)$/gm, (_, content) => 
+      headings.h1.useLeft
+        ? `${headings.h1.left}${content}${headings.h1.left}${newline}`
+        : `${headings.h1.left}${content}${headings.h1.right}${newline}`
+    );
+
+    result = result.replace(/^## (.+)$/gm, (_, content) => 
+      headings.h2.useLeft
+        ? `${headings.h2.left}${content}${headings.h2.left}${newline}`
+        : `${headings.h2.left}${content}${headings.h2.right}${newline}`
+    );
+
+    result = result.replace(/^### (.+)$/gm, (_, content) => 
+      headings.h3.useLeft
+        ? `${headings.h3.left}${content}${headings.h3.left}${newline}`
+        : `${headings.h3.left}${content}${headings.h3.right}${newline}`
+    );
+    
+    // 處理粗體和斜體
+    const { emphasis } = markdownSettings;
+    
+    // 粗體
+    const boldPattern = /\*\*(.+?)\*\*/g;
+    result = result.replace(boldPattern, (_, content) => 
+      emphasis.bold.useLeft
+        ? `${emphasis.bold.left}${content}${emphasis.bold.left}`
+        : `${emphasis.bold.left}${content}${emphasis.bold.right}`
+    );
+    
+    // 斜體
+    const italicPattern = /\*(.+?)\*/g;
+    result = result.replace(italicPattern, (_, content) =>
+      emphasis.italic.useLeft
+        ? `${emphasis.italic.left}${content}${emphasis.italic.left}`
+        : `${emphasis.italic.left}${content}${emphasis.italic.right}`
+    );
     
     // 處理列表
-    result = result.replace(/^[-*+] (.+)$/gm, `${markdownSettings.list}$1`);
+    const { list } = markdownSettings;
+    
+    // 無序列表（支援階層）
+    const bulletSymbol = list.bullet === 'custom' && list.customBullet 
+      ? list.customBullet 
+      : list.bullet;
 
-    // 移除粗體和斜體符號，但保留文字內容
-    result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // 移除粗體符號
-    result = result.replace(/\*(.+?)\*/g, '$1');     // 移除斜體符號
+    result = result.replace(/^(\s*)[-*+] (.+)$/gm, (match, indent, content) => {
+      // 計算縮排層級（每兩個空格為一層）
+      const level = Math.floor(indent.length / 2);
+      // 根據層級添加縮排
+      const padding = '  '.repeat(level);
+      return `${padding}${bulletSymbol}${content}`;
+    });
 
+    // 有序列表（支援階層）
+    if (list.numberStyle !== 'none') {
+      const numbers = list.numberStyle === 'circled' ? CIRCLED_NUMBERS : PARENTHESIZED_NUMBERS;
+      result = result.replace(/^(\s*)(\d+)\. (.+)$/gm, (match, indent, num, content) => {
+        // 計算縮排層級
+        const level = Math.floor(indent.length / 2);
+        const padding = '  '.repeat(level);
+        const index = parseInt(num) - 1;
+        return `${padding}${index < 10 ? numbers[index] : num + '.'} ${content}`;
+      });
+    }
+    
     return result;
   };
 
@@ -313,8 +383,8 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
   }
 
   return (
-    <div className="p-4">
-      <form onSubmit={handleSubmit} className="mb-8">
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* 設定區域 - 兩欄布局 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* 左欄 - 基本設定 */}
@@ -496,32 +566,252 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
                     </button>
                   </div>
                   
-                  <div className="space-y-4">
-                    {/* Emoji settings */}
-                    {Object.entries(markdownSettings)
-                      .filter(([key]) => key !== 'headingNewline')
-                      .map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between">
-                          <label className="text-sm text-gray-600 flex-grow">
-                            {t.options.markdownSettings[key as keyof MarkdownSettings]}
+                  <div className="space-y-6">
+                    {/* 標題設定 */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">{t.options.markdownSettings.headings.title}</h3>
+                      <div className="space-y-4">
+                        {Object.entries(markdownSettings.headings).map(([key, value]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <label className="text-sm text-gray-600">
+                              {t.options.markdownSettings.headings[key as keyof typeof markdownSettings.headings]}
+                            </label>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                value={value.left}
+                                onChange={(e) => setMarkdownSettings(prev => ({
+                                  ...prev,
+                                  headings: {
+                                    ...prev.headings,
+                                    [key]: {
+                                      ...prev.headings[key],
+                                      left: e.target.value
+                                    }
+                                  }
+                                }))}
+                                className="w-20 px-2 py-1 border rounded"
+                              />
+                              <input
+                                type="text"
+                                value={value.right}
+                                onChange={(e) => setMarkdownSettings(prev => ({
+                                  ...prev,
+                                  headings: {
+                                    ...prev.headings,
+                                    [key]: {
+                                      ...prev.headings[key],
+                                      right: e.target.value
+                                    }
+                                  }
+                                }))}
+                                className="w-20 px-2 py-1 border rounded"
+                              />
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={value.useLeft}
+                                  onChange={(e) => setMarkdownSettings(prev => ({
+                                    ...prev,
+                                    headings: {
+                                      ...prev.headings,
+                                      [key]: {
+                                        ...prev.headings[key],
+                                        useLeft: e.target.checked
+                                      }
+                                    }
+                                  }))}
+                                  className="form-checkbox h-4 w-4"
+                                />
+                                <span className="text-sm">{t.options.markdownSettings.headings.useLeft}</span>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 強調設定 */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">{t.options.markdownSettings.emphasis.title}</h3>
+                      <div className="space-y-4">
+                        {Object.entries(markdownSettings.emphasis).map(([key, value]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <label className="text-sm text-gray-600">
+                              {t.options.markdownSettings.emphasis[key as keyof typeof markdownSettings.emphasis]}
+                            </label>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                value={value.left}
+                                onChange={(e) => setMarkdownSettings(prev => ({
+                                  ...prev,
+                                  emphasis: {
+                                    ...prev.emphasis,
+                                    [key]: {
+                                      ...prev.emphasis[key],
+                                      left: e.target.value
+                                    }
+                                  }
+                                }))}
+                                className="w-20 px-2 py-1 border rounded"
+                              />
+                              <input
+                                type="text"
+                                value={value.right}
+                                onChange={(e) => setMarkdownSettings(prev => ({
+                                  ...prev,
+                                  emphasis: {
+                                    ...prev.emphasis,
+                                    [key]: {
+                                      ...prev.emphasis[key],
+                                      right: e.target.value
+                                    }
+                                  }
+                                }))}
+                                className="w-20 px-2 py-1 border rounded"
+                              />
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={value.useLeft}
+                                  onChange={(e) => setMarkdownSettings(prev => ({
+                                    ...prev,
+                                    emphasis: {
+                                      ...prev.emphasis,
+                                      [key]: {
+                                        ...prev.emphasis[key],
+                                        useLeft: e.target.checked
+                                      }
+                                    }
+                                  }))}
+                                  className="form-checkbox h-4 w-4"
+                                />
+                                <span className="text-sm">{t.options.markdownSettings.headings.useLeft}</span>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 列表設定 */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">{t.options.markdownSettings.list.title}</h3>
+                      <div className="space-y-4">
+                        {/* 無序列表符號 */}
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm text-gray-600">
+                            {t.options.markdownSettings.list.bullet}
                           </label>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-500">→</span>
-                            <input
-                              type="text"
-                              value={value}
-                              onChange={(e) => setMarkdownSettings(prev => ({
-                                ...prev,
-                                [key]: e.target.value
-                              }))}
-                              className="w-20 px-2 py-1 border rounded"
-                            />
+                          <div className="flex items-center space-x-2 relative">
+                            <select
+                              value={BULLET_OPTIONS.includes(markdownSettings.list.bullet) ? markdownSettings.list.bullet : 'custom'}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === 'custom') {
+                                  setMarkdownSettings(prev => ({
+                                    ...prev,
+                                    list: {
+                                      ...prev.list,
+                                      bullet: 'custom',
+                                      customBullet: ''
+                                    }
+                                  }));
+                                } else {
+                                  setMarkdownSettings(prev => ({
+                                    ...prev,
+                                    list: {
+                                      ...prev.list,
+                                      bullet: value,
+                                      customBullet: undefined
+                                    }
+                                  }));
+                                }
+                              }}
+                              className="w-32 px-2 py-1 border rounded"
+                            >
+                              {BULLET_OPTIONS.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                              <option value="custom">{t.options.markdownSettings.list.customBullet}</option>
+                            </select>
+                            
+                            {/* 自訂符號輸入框 */}
+                            {markdownSettings.list.bullet === 'custom' && (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={markdownSettings.list.customBullet || ''}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    setMarkdownSettings(prev => ({
+                                      ...prev,
+                                      list: {
+                                        ...prev.list,
+                                        bullet: 'custom',
+                                        customBullet: value
+                                      }
+                                    }));
+                                  }}
+                                  className="w-20 px-2 py-1 border rounded"
+                                  placeholder={t.options.markdownSettings.list.customBullet}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowEmojiPicker(prev => !prev)}
+                                  className="p-2 hover:bg-gray-100 rounded"
+                                >
+                                  😀
+                                </button>
+                                {showEmojiPicker && (
+                                  <div className="absolute right-0 top-full mt-1 z-50">
+                                    <EmojiPicker
+                                      onEmojiClick={(emojiData) => {
+                                        setMarkdownSettings(prev => ({
+                                          ...prev,
+                                          list: {
+                                            ...prev.list,
+                                            bullet: 'custom',
+                                            customBullet: emojiData.emoji
+                                          }
+                                        }));
+                                        setShowEmojiPicker(false);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      ))}
 
-                    {/* Heading newline setting */}
-                    <div className="flex items-center space-x-2 pt-2 border-t">
+                        {/* 數字列表樣式 */}
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm text-gray-600">
+                            {t.options.markdownSettings.list.numberStyle}
+                          </label>
+                          <select
+                            value={markdownSettings.list.numberStyle}
+                            onChange={(e) => setMarkdownSettings(prev => ({
+                              ...prev,
+                              list: {
+                                ...prev.list,
+                                numberStyle: e.target.value as 'none' | 'circled' | 'parenthesized'
+                              }
+                            }))}
+                            className="w-48 px-2 py-1 border rounded"
+                          >
+                            {Object.entries(t.options.markdownSettings.list.numberStyles).map(([key, value]) => (
+                              <option key={key} value={key}>{value}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 標題換行設定 */}
+                    <div className="flex items-center space-x-2 pt-4 border-t">
                       <input
                         type="checkbox"
                         id="headingNewline"
