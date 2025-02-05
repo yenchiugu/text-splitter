@@ -1,108 +1,106 @@
-# ThreadSplitter - Smart Thread Composer
+# ThreadSplitter
 
-ThreadSplitter is a smart text splitting tool designed specifically for Threads and Twitter/X platforms. It intelligently splits long text into appropriate segments while maintaining readability and content integrity.
+[English](#english) | [中文](#中文)
 
-[中文版本](#threadsplitter---智慧型長文分割工具)
+## English
 
-## Key Features
+ThreadSplitter is a smart text splitting tool designed for social media platforms, with special focus on Threads and X/Twitter.
 
-### 1. Smart Splitting
-- Automatically splits text while preserving sentence and paragraph integrity
-- Supports custom maximum length (default: Threads 500 characters limit)
-- Smart handling of text within brackets to avoid improper breaks
+### Features
 
-### 2. Multilingual Support
-- Interface available in Traditional Chinese, Simplified Chinese, Japanese, and English
-- Complete localization
+- **Smart Text Splitting**
+  - Respects sentence boundaries
+  - Preserves bracket pairs
+  - Supports CJK characters
+  - Configurable maximum length
 
-### 3. Markdown Conversion
-- Converts Markdown syntax to emojis
-- Customizable emojis for headings and lists
-- Optional line breaks after headings
+- **Markdown to Emoji Conversion**
+  - Headings with customizable symbols
+  - Lists with emoji bullets
+  - Numbered lists with special characters (①, ②, ③)
+  - Bold and italic text conversion
 
-### 4. Page Number Settings
-- Customizable page number format and position
-- Adjustable line break count
-- Real-time preview
+- **Page Number Options**
+  - Customizable format
+  - Flexible positioning
+  - Adjustable line breaks
 
-### 5. Special Features
-- Removes reference links from ChatGPT output
-- CJK character double-width calculation (for Twitter/X)
-- Preview width adjustment (matches Threads display width)
+- **User Interface**
+  - Multi-language support (English, Traditional Chinese, Simplified Chinese, Japanese)
+  - Live preview
+  - Copy to clipboard functionality
+  - Character count display
 
-### 6. Copy Tracking
-- Shows copy count for each segment
-- Visual feedback for copy status
-- Helps track posting progress
+### Usage
 
-## Author Information
+1. Enter or paste your text
+2. Configure settings as needed
+3. Click "Split Text"
+4. Copy the split segments
 
-- Author: Sam Ku
-- Email: yenchiugu@gmail.com
-- Threads: [@yenchiugu](https://www.threads.net/@yenchiugu)
-- X: [@yenchiugu](https://x.com/yenchiugu)
-- Version: 1.0.0
+### Development
 
-## Technical Stack
+```bash
+# Install dependencies
+npm install
 
-- Next.js 13 App Router
-- TypeScript
-- Tailwind CSS
-- Heroicons
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
 
 ---
 
-# ThreadSplitter - 智慧型長文分割工具
+## 中文
 
-ThreadSplitter 是一個專為 Threads 和 Twitter/X 平台設計的智慧型長文分割工具。它能夠智慧地將長文分割成適合的片段，同時保持文章的完整性和可讀性。
+ThreadSplitter 是一個智慧型文字分割工具，專為社群媒體平台設計，特別針對 Threads 和 X/Twitter 優化。
 
-[English Version](#threadsplitter---smart-thread-composer)
+### 功能特色
 
-## 主要功能
+- **智慧分割**
+  - 保持句子完整性
+  - 維持括號配對
+  - 支援中日韓文字
+  - 可調整最大長度
 
-### 1. 智慧分割
-- 自動分割長文，保持句子和段落的完整性
-- 支援自訂最大長度（預設為 Threads 的 500 字元限制）
-- 智慧處理括號內的文字，避免不當斷句
+- **Markdown 轉換**
+  - 可自訂標題符號
+  - 支援 emoji 列表符號
+  - 特殊數字列表 (①, ②, ③)
+  - 粗體與斜體轉換
 
-### 2. 多語言支援
-- 支援繁體中文、簡體中文、日文和英文介面
-- 完整的在地化翻譯
+- **換頁符號設定**
+  - 自訂格式
+  - 靈活的位置選擇
+  - 可調整換行數量
 
-### 3. Markdown 轉換
-- 將 Markdown 標記轉換為表情符號
-- 可自訂標題和列表的表情符號
-- 支援標題後自動換行
+- **使用者介面**
+  - 多語言支援（英文、繁中、簡中、日文）
+  - 即時預覽
+  - 一鍵複製
+  - 字數統計
 
-### 4. 頁碼設定
-- 自訂頁碼格式和位置
-- 支援頁碼前後的換行數量設定
-- 即時預覽頁碼效果
+### 使用方式
 
-### 5. 特殊功能
-- 移除 ChatGPT 產生的參考連結
-- CJK 字元雙倍寬度計算（適用於 Twitter/X）
-- 預覽寬度調整（符合 Threads 實際顯示寬度）
+1. 輸入或貼上文字
+2. 依需求調整設定
+3. 點擊「分割文章」
+4. 複製分割後的內容
 
-### 6. 複製追蹤
-- 顯示已複製次數
-- 複製狀態視覺回饋
-- 協助追蹤發文進度
+### 開發相關
 
-## 作者資訊
+```bash
+# 安裝相依套件
+npm install
 
-- 作者：Sam Ku
-- Email：yenchiugu@gmail.com
-- Threads：[@yenchiugu](https://www.threads.net/@yenchiugu)
-- X：[@yenchiugu](https://x.com/yenchiugu)
-- 版本：1.0.0
+# 執行開發伺服器
+npm run dev
 
-## 技術實作
-
-- Next.js 13 App Router
-- TypeScript
-- Tailwind CSS
-- Heroicons
+# 建置正式版本
+npm run build
+```
 
 ## License
 
