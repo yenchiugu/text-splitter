@@ -1,47 +1,112 @@
-# Text Splitter for Threads
+# ThreadSplitter - Smart Thread Composer
 
-A web application that helps split long text into segments suitable for platforms with character limits, such as Threads (500 characters). Built with Next.js and TypeScript.
+ThreadSplitter is a smart text splitting tool designed specifically for Threads and Twitter/X platforms. It intelligently splits long text into appropriate segments while maintaining readability and content integrity.
 
-## Features
+[中文版本](#threadsplitter---智慧型長文分割工具)
 
-- 🔄 Smart text splitting that preserves:
-  - Sentence integrity
-  - Bracket pairs (「」, （）, 《》, [], (), {})
-  - Line breaks
-- 📏 Configurable length settings:
-  - Threads mode (500 characters)
-  - Custom length mode
-- 🌐 Multilingual support:
-  - English (default)
-  - Traditional Chinese
-  - Simplified Chinese
-  - Japanese
-- 📋 Copy to clipboard functionality
-- 🔢 Character count display
-- 🔗 Language selection via URL parameter
+## Key Features
 
-## Usage
+### 1. Smart Splitting
+- Automatically splits text while preserving sentence and paragraph integrity
+- Supports custom maximum length (default: Threads 500 characters limit)
+- Smart handling of text within brackets to avoid improper breaks
 
-1. Select your preferred language (or use URL parameter `?lang=zh-TW`)
-2. Choose length mode:
-   - Threads (500 characters)
-   - Custom length
-3. Input your text
-4. Click "Split Text"
-5. Copy individual segments using the copy button
+### 2. Multilingual Support
+- Interface available in Traditional Chinese, Simplified Chinese, Japanese, and English
+- Complete localization
 
-## Smart Splitting Rules
+### 3. Markdown Conversion
+- Converts Markdown syntax to emojis
+- Customizable emojis for headings and lists
+- Optional line breaks after headings
 
-The application follows these rules when splitting text:
+### 4. Page Number Settings
+- Customizable page number format and position
+- Adjustable line break count
+- Real-time preview
 
-1. Respects maximum length limit (including prefix)
-2. Never splits within bracket pairs
-3. Prioritizes splitting at:
-   - Line breaks
-   - Chinese periods (。)
-   - English periods (.)
-4. Adds "(n/m)" prefix for multiple segments
-5. Preserves sentence integrity where possible
+### 5. Special Features
+- Removes reference links from ChatGPT output
+- CJK character double-width calculation (for Twitter/X)
+- Preview width adjustment (matches Threads display width)
+
+### 6. Copy Tracking
+- Shows copy count for each segment
+- Visual feedback for copy status
+- Helps track posting progress
+
+## Author Information
+
+- Author: Sam Ku
+- Email: yenchiugu@gmail.com
+- Threads: [@yenchiugu](https://www.threads.net/@yenchiugu)
+- X: [@yenchiugu](https://x.com/yenchiugu)
+- Version: 1.0.0
+
+## Technical Stack
+
+- Next.js 13 App Router
+- TypeScript
+- Tailwind CSS
+- Heroicons
+
+---
+
+# ThreadSplitter - 智慧型長文分割工具
+
+ThreadSplitter 是一個專為 Threads 和 Twitter/X 平台設計的智慧型長文分割工具。它能夠智慧地將長文分割成適合的片段，同時保持文章的完整性和可讀性。
+
+[English Version](#threadsplitter---smart-thread-composer)
+
+## 主要功能
+
+### 1. 智慧分割
+- 自動分割長文，保持句子和段落的完整性
+- 支援自訂最大長度（預設為 Threads 的 500 字元限制）
+- 智慧處理括號內的文字，避免不當斷句
+
+### 2. 多語言支援
+- 支援繁體中文、簡體中文、日文和英文介面
+- 完整的在地化翻譯
+
+### 3. Markdown 轉換
+- 將 Markdown 標記轉換為表情符號
+- 可自訂標題和列表的表情符號
+- 支援標題後自動換行
+
+### 4. 頁碼設定
+- 自訂頁碼格式和位置
+- 支援頁碼前後的換行數量設定
+- 即時預覽頁碼效果
+
+### 5. 特殊功能
+- 移除 ChatGPT 產生的參考連結
+- CJK 字元雙倍寬度計算（適用於 Twitter/X）
+- 預覽寬度調整（符合 Threads 實際顯示寬度）
+
+### 6. 複製追蹤
+- 顯示已複製次數
+- 複製狀態視覺回饋
+- 協助追蹤發文進度
+
+## 作者資訊
+
+- 作者：Sam Ku
+- Email：yenchiugu@gmail.com
+- Threads：[@yenchiugu](https://www.threads.net/@yenchiugu)
+- X：[@yenchiugu](https://x.com/yenchiugu)
+- 版本：1.0.0
+
+## 技術實作
+
+- Next.js 13 App Router
+- TypeScript
+- Tailwind CSS
+- Heroicons
+
+## License
+
+MIT License
 
 ## Getting Started
 
