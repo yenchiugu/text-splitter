@@ -1,9 +1,9 @@
 import { Translations } from '../types';
 
 export const ja: Translations = {
-  title: 'テキスト分割ツール',
+  title: '文織',
   meta: {
-    description: 'SNS向けにテキストを分割するツール',
+    description: 'スマート投稿分割ツール。Markdown対応、CJK文字完全サポート',
   },
   lengthSettings: {
     title: '最大長設定',

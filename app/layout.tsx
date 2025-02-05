@@ -11,10 +11,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://text-splitter-101940853523.asia-east1.run.app'),
-  applicationName: 'Text Splitter',
+  applicationName: 'ThreadCraft',
   title: {
-    template: '%s | Text Splitter',
-    default: 'Text Splitter - Social Media Text Splitter Tool'
+    template: '%s | ThreadCraft',
+    default: 'ThreadCraft - Smart Text Splitter'
   },
   description: 'Free tool to split long text into segments for social media platforms like Threads, Twitter/X. Supports Markdown conversion and CJK characters.',
   keywords: ['text splitter', 'thread composer', 'social media', 'threads app', 'twitter', 'markdown', 'CJK', '文字分割', 'テキスト分割'],

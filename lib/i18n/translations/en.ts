@@ -1,9 +1,9 @@
 import { Translations } from '../types';
 
 export const en: Translations = {
-  title: 'ThreadSplitter - Smart Thread Composer',
+  title: 'ThreadCraft',
   meta: {
-    description: 'Split your text into segments for social media platforms',
+    description: 'Smart text splitter for crafting perfect social media threads. Supports Markdown and CJK characters.',
   },
   lengthSettings: {
     title: 'Maximum Length Settings',

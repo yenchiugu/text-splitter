@@ -1,9 +1,9 @@
 import { Translations } from '../types';
 
 export const zhTW: Translations = {
-  title: '文字分割器',
+  title: '文織',
   meta: {
-    description: '將您的文字分割成適合社群媒體的片段',
+    description: '智慧型文章分割工具，完美支援社群媒體分享、Markdown 與 CJK 文字',
   },
   lengthSettings: {
     title: '最大長度設定',
@@ -89,4 +89,4 @@ export const zhTW: Translations = {
       x: '在 X 上關注',
     },
   },
-}; 
+} as const; 

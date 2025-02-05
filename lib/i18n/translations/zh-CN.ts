@@ -1,9 +1,9 @@
 import { Translations } from '../types';
 
 export const zhCN: Translations = {
-  title: '文字分割器',
+  title: '文织',
   meta: {
-    description: '将您的文字分割成适合社交媒体的片段',
+    description: '智能文章分割工具，完美支持社交媒体分享、Markdown 与 CJK 文字',
   },
   lengthSettings: {
     title: '最大长度设置',
