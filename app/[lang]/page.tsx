@@ -79,7 +79,7 @@ export default async function Home({ params }: PageProps) {
         </div>
 
         {/* 主要內容 */}
-        <TextSplitter language={lang} translations={t} />
+        <TextSplitter translations={t} />
       </div>
     </div>
   );

@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { MarkdownSettings, PageNumberSettings, WidthSetting, Translations } from '@/lib/i18n/types';
+import { 
+  MarkdownSettings, 
+  PageNumberSettings, 
+  WidthSetting, 
+  Translations,
+  SymbolPair
+} from '@/lib/i18n/types';
 import SplitResult from './SplitResult';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import EmojiPicker from 'emoji-picker-react';
@@ -88,6 +94,10 @@ const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
 interface TextSplitterProps {
   translations: Translations;
 }
+
+// 新增強調設定的 key 型別
+type HeadingKey = 'h1' | 'h2' | 'h3';
+type EmphasisKey = 'bold' | 'italic';
 
 /**
  * TextSplitter Component
@@ -511,10 +521,10 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                     <div>
                       <h3 className="text-sm font-medium text-gray-700 mb-3">{t.options.markdownSettings.headings.title}</h3>
                       <div className="space-y-4">
-                        {Object.entries(markdownSettings.headings).map(([key, value]) => (
+                        {(Object.entries(markdownSettings.headings) as [HeadingKey, SymbolPair][]).map(([key, value]) => (
                           <div key={key} className="flex items-center justify-between">
                             <label className="text-sm text-gray-600">
-                              {t.options.markdownSettings.headings[key as keyof typeof markdownSettings.headings]}
+                              {t.options.markdownSettings.headings[key as keyof typeof t.options.markdownSettings.headings]}
                             </label>
                             <div className="flex items-center space-x-2">
                               <input
@@ -525,7 +535,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                   headings: {
                                     ...prev.headings,
                                     [key]: {
-                                      ...prev.headings[key],
+                                      ...prev.headings[key as HeadingKey],
                                       left: e.target.value
                                     }
                                   }
@@ -540,7 +550,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                   headings: {
                                     ...prev.headings,
                                     [key]: {
-                                      ...prev.headings[key],
+                                      ...prev.headings[key as HeadingKey],
                                       right: e.target.value
                                     }
                                   }
@@ -556,7 +566,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                     headings: {
                                       ...prev.headings,
                                       [key]: {
-                                        ...prev.headings[key],
+                                        ...prev.headings[key as HeadingKey],
                                         useLeft: e.target.checked
                                       }
                                     }
@@ -575,10 +585,10 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                     <div>
                       <h3 className="text-sm font-medium text-gray-700 mb-3">{t.options.markdownSettings.emphasis.title}</h3>
                       <div className="space-y-4">
-                        {Object.entries(markdownSettings.emphasis).map(([key, value]) => (
+                        {(Object.entries(markdownSettings.emphasis) as [EmphasisKey, SymbolPair][]).map(([key, value]) => (
                           <div key={key} className="flex items-center justify-between">
                             <label className="text-sm text-gray-600">
-                              {t.options.markdownSettings.emphasis[key as keyof typeof markdownSettings.emphasis]}
+                              {t.options.markdownSettings.emphasis[key as keyof typeof t.options.markdownSettings.emphasis]}
                             </label>
                             <div className="flex items-center space-x-2">
                               <input
@@ -589,7 +599,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                   emphasis: {
                                     ...prev.emphasis,
                                     [key]: {
-                                      ...prev.emphasis[key],
+                                      ...prev.emphasis[key as EmphasisKey],
                                       left: e.target.value
                                     }
                                   }
@@ -604,7 +614,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                   emphasis: {
                                     ...prev.emphasis,
                                     [key]: {
-                                      ...prev.emphasis[key],
+                                      ...prev.emphasis[key as EmphasisKey],
                                       right: e.target.value
                                     }
                                   }
@@ -620,7 +630,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                                     emphasis: {
                                       ...prev.emphasis,
                                       [key]: {
-                                        ...prev.emphasis[key],
+                                        ...prev.emphasis[key as EmphasisKey],
                                         useLeft: e.target.checked
                                       }
                                     }
@@ -884,7 +894,6 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
               key={idx} 
               text={seg} 
               translations={t}
-              index={idx}
               countCJKAsTwo={countCJKAsTwo}
             />
           ))}
