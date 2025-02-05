@@ -14,12 +14,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { lang } = await params;
   const t = await getTranslation(lang);
   
+  const title = t.title;
+  const description = t.meta?.description;
+  
   return {
-    title: t.title,
-    description: t.meta?.description || 'Split your text into segments for social media platforms',
+    title,
+    description,
+    alternates: {
+      canonical: `https://text-splitter-101940853523.asia-east1.run.app/${lang}`,
+      languages: {
+        'en': '/en',
+        'zh-TW': '/zh-TW',
+        'zh-CN': '/zh-CN',
+        'ja': '/ja',
+      },
+    },
     openGraph: {
-      title: t.title,
-      description: t.meta?.description || 'Split your text into segments for social media platforms',
+      title,
+      description,
+      locale: lang === 'en' ? 'en_US' : 
+              lang === 'zh-TW' ? 'zh_TW' : 
+              lang === 'zh-CN' ? 'zh_CN' : 'ja_JP',
+    },
+    twitter: {
+      title,
+      description,
     },
   };
 }

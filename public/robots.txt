@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://text-splitter-101940853523.asia-east1.run.app/sitemap.xml 
