@@ -2,14 +2,7 @@ import { Language } from '@/lib/i18n/types';
 import { getTranslation, LANGUAGES } from '@/lib/i18n';
 import TextSplitter from '@/components/TextSplitter';
 import Link from 'next/link';
-
-// 作者資訊常數
-const AUTHOR_INFO = {
-  name: 'Sam Ku',
-  email: 'yenchiugu@gmail.com',
-  threads: 'https://www.threads.net/@yenchiugu',
-  x: 'https://x.com/yenchiugu'
-};
+import { APP_INFO } from '@/lib/constants';
 
 interface PageProps {
   params: Promise<{ lang: Language }>;
@@ -32,20 +25,20 @@ export default async function Home({ params }: PageProps) {
             <div className="flex items-center space-x-8">
               <h1 className="text-2xl font-bold">{t.title}</h1>
               <div className="text-sm text-gray-500 flex items-center divide-x">
-                <div className="pr-4">{t.footer.version}: 1.0.0</div>
+                <div className="pr-4">{t.footer.version}: {APP_INFO.VERSION}</div>
                 <div className="px-4">
-                  {t.footer.author}: {AUTHOR_INFO.name}
+                  {t.footer.author}: {APP_INFO.AUTHOR}
                 </div>
                 <div className="pl-4 space-x-3">
                   <a 
-                    href={`mailto:${AUTHOR_INFO.email}`}
+                    href={`mailto:${APP_INFO.EMAIL}`}
                     className="text-gray-500 hover:text-gray-700"
                     title={t.footer.email}
                   >
                     ✉️
                   </a>
                   <a 
-                    href={AUTHOR_INFO.threads}
+                    href={APP_INFO.SOCIAL.THREADS}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-500 hover:text-gray-700"
@@ -54,7 +47,7 @@ export default async function Home({ params }: PageProps) {
                     📱
                   </a>
                   <a 
-                    href={AUTHOR_INFO.x}
+                    href={APP_INFO.SOCIAL.X}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-500 hover:text-gray-700"
