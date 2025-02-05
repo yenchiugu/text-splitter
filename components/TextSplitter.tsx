@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Language, Translations } from '@/lib/i18n/types';
+import { Language, Translations, MarkdownSettings, PageNumberSettings, WidthType, WidthSetting } from '@/lib/i18n/types';
 import { getTranslation, getInitialLanguage, LANGUAGES } from '@/lib/i18n';
 import SplitResult from './SplitResult';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 // Maximum character limit for Threads platform
 const THREADS_MAX_LENGTH = 500;
@@ -113,45 +114,22 @@ function calcPrefixLength(total: number): number {
   return 4 + 2 * digits;
 }
 
-/**
- * Main text splitting function
- * 1. If text length <= maxLength, return text as is
- * 2. Initially assume prefix length of 6 (for single-digit segments)
- * 3. Split text and recalculate prefix length based on actual segments
- * 4. If needed, resplit with adjusted allowedLen
- * 5. Add "(n/m) " prefix to each segment if multiple segments
- * 
- * @param text - The input text to split
- * @param maxLength - Maximum length for each segment (including prefix)
- * @returns string[] - Array of formatted text segments
- */
-function splitArticle(text: string, maxLength: number): string[] {
-  if (text.length <= maxLength) return [text];
+const DEFAULT_MARKDOWN_SETTINGS: MarkdownSettings = {
+  h1: '🔊',
+  h2: '🔉',
+  h3: '🔈',
+  list: '🔹',
+  headingNewline: true,
+};
 
-  // 初步假設前綴長度為 6（適用於 1~9 段），故 allowedLen = 500 - 6
-  let prefixLength = 6;
-  let allowedLen = maxLength - prefixLength;
-  let segments = splitSegments(text, allowedLen);
+const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
+  format: 'Page (n/m)',
+  position: 'bottom',
+  newlineCount: 2, // 預設兩個換行符號
+};
 
-  // 根據實際段數，重新計算前綴長度
-  const newPrefixLength = calcPrefixLength(segments.length);
-  if (newPrefixLength !== prefixLength) {
-    prefixLength = newPrefixLength;
-    allowedLen = maxLength - prefixLength;
-    segments = splitSegments(text, allowedLen);
-  }
-
-  // 最後若有多段，為每段加入前綴；若只有一段，則直接使用原文
-  if (segments.length > 1) {
-    segments = segments.map((seg, idx) => `(${idx + 1}/${segments.length}) ${seg}`);
-  }
-  return segments;
-}
-
-interface TextSplitterProps {
-  language: Language;
-  translations: Translations;
-}
+// 新增常數
+const THREADS_WIDTH = 542.4;
 
 /**
  * TextSplitter Component
@@ -172,6 +150,66 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
   const [lengthSetting, setLengthSetting] = useState<LengthSetting>({
     type: 'threads'
   });
+  const [removeReferences, setRemoveReferences] = useState(true);
+  const [convertMarkdown, setConvertMarkdown] = useState(true);
+  const [markdownSettings, setMarkdownSettings] = useState<MarkdownSettings>({
+    ...DEFAULT_MARKDOWN_SETTINGS,
+    headingNewline: true,
+  });
+  const [pageNumberSettings, setPageNumberSettings] = useState<PageNumberSettings>(DEFAULT_PAGE_NUMBER_SETTINGS);
+  const [widthSetting, setWidthSetting] = useState<WidthSetting>({
+    type: 'threads'
+  });
+  const [countCJKAsTwo, setCountCJKAsTwo] = useState(false);
+
+  // 計算當前寬度
+  const currentWidth = widthSetting.type === 'threads' 
+    ? THREADS_WIDTH 
+    : widthSetting.customValue || THREADS_WIDTH;
+
+  // 移除參考連結的函數
+  const removeReferenceLinks = (text: string): string => {
+    if (!removeReferences) return text;
+    // 移除格式為 ([文字](URL)) 的參考連結
+    return text.replace(/\(\[[^\]]*\]\([^)]*\)\)/g, '');
+  };
+
+  // Markdown 轉換函數
+  const convertMarkdownToEmoji = (text: string): string => {
+    if (!convertMarkdown) return text;
+
+    let result = text;
+    
+    // 處理標題，根據設定決定是否加入換行
+    const newline = markdownSettings.headingNewline ? '\n' : '';
+    result = result.replace(/^# (.+)$/gm, `${markdownSettings.h1}$1${newline}`);
+    result = result.replace(/^## (.+)$/gm, `${markdownSettings.h2}$1${newline}`);
+    result = result.replace(/^### (.+)$/gm, `${markdownSettings.h3}$1${newline}`);
+    
+    // 處理列表
+    result = result.replace(/^[-*+] (.+)$/gm, `${markdownSettings.list}$1`);
+
+    // 移除粗體和斜體符號，但保留文字內容
+    result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // 移除粗體符號
+    result = result.replace(/\*(.+?)\*/g, '$1');     // 移除斜體符號
+
+    return result;
+  };
+
+  // 計算換頁符號的實際長度
+  const getPageNumberLength = (total: number, current: number): number => {
+    return pageNumberSettings.format
+      .replace('n', current.toString())
+      .replace('m', total.toString())
+      .length + pageNumberSettings.newlineCount; // 加上換行符的長度
+  };
+
+  // 生成換頁符號
+  const generatePageNumber = (current: number, total: number): string => {
+    return pageNumberSettings.format
+      .replace('n', current.toString())
+      .replace('m', total.toString());
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,78 +217,445 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
       ? THREADS_MAX_LENGTH 
       : lengthSetting.customValue || THREADS_MAX_LENGTH;
     
-    const segs = splitArticle(inputText, maxLength);
+    let processedText = inputText;
+    if (removeReferences) {
+      processedText = removeReferenceLinks(processedText);
+    }
+    if (convertMarkdown) {
+      processedText = convertMarkdownToEmoji(processedText);
+    }
+    
+    const segs = splitArticle(processedText, maxLength);
     setSegments(segs);
   };
 
+  const handleResetMarkdownSettings = () => {
+    setMarkdownSettings(DEFAULT_MARKDOWN_SETTINGS);
+  };
+
+  // 檢查是否為 CJK 字元的函數
+  function isCJKChar(char: string): boolean {
+    return /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]/.test(char);
+  }
+
+  // 計算文字長度的函數
+  function calculateLength(text: string, countCJKAsTwo: boolean): number {
+    if (!countCJKAsTwo) return text.length;
+    
+    return text.split('').reduce((acc, char) => {
+      return acc + (isCJKChar(char) ? 2 : 1);
+    }, 0);
+  }
+
+  // 修改 splitArticle 函數
+  function splitArticle(text: string, maxLength: number): string[] {
+    if (calculateLength(text, countCJKAsTwo) <= maxLength) return [text];
+
+    // 初步分割，考慮最大換頁符號長度
+    const maxPageNumLen = getPageNumberLength(99, 99);
+    let allowedLen = maxLength - maxPageNumLen;
+    let segments = splitSegmentsWithCJK(text, allowedLen);
+
+    // 根據實際頁數重新計算
+    const actualPageNumLen = getPageNumberLength(segments.length, segments.length);
+    if (actualPageNumLen !== maxPageNumLen) {
+      allowedLen = maxLength - actualPageNumLen;
+      segments = splitSegmentsWithCJK(text, allowedLen);
+    }
+
+    // 加入換頁符號
+    return segments.map((seg, idx) => {
+      const pageNum = generatePageNumber(idx + 1, segments.length);
+      const newlines = '\n'.repeat(pageNumberSettings.newlineCount);
+      return pageNumberSettings.position === 'top'
+        ? `${pageNum}${newlines}${seg}`
+        : `${seg}${newlines}${pageNum}`;
+    });
+  }
+
+  // 新增考慮 CJK 的分割函數
+  function splitSegmentsWithCJK(text: string, allowedLen: number): string[] {
+    const segments: string[] = [];
+    let remaining = text.trim();
+
+    while (remaining.length > 0) {
+      if (calculateLength(remaining, countCJKAsTwo) <= allowedLen) {
+        segments.push(remaining);
+        break;
+      }
+
+      let cutPos = 0;
+      let currentLength = 0;
+
+      // 向前搜尋適合的切割點
+      for (let i = 0; i < remaining.length; i++) {
+        const char = remaining[i];
+        const charLength = isCJKChar(char) && countCJKAsTwo ? 2 : 1;
+        
+        if (currentLength + charLength > allowedLen) break;
+        
+        currentLength += charLength;
+        if ((char === '\n' || char === '。' || char === '.') && !isInsideBrackets(remaining, i)) {
+          cutPos = i + 1;
+        }
+      }
+
+      // 如果沒找到合適的切割點，就在最大長度處切割
+      if (cutPos === 0) {
+        cutPos = Math.max(1, Math.floor(allowedLen / (countCJKAsTwo ? 1.5 : 1)));
+      }
+
+      segments.push(remaining.substring(0, cutPos).trim());
+      remaining = remaining.substring(cutPos).trim();
+    }
+
+    return segments;
+  }
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{t.title}</h1>
+      <form onSubmit={handleSubmit} className="mb-8">
+        {/* 設定區域 - 兩欄布局 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* 左欄 - 基本設定 */}
+          <div className="space-y-6">
+            {/* 長度設定 */}
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <h2 className="text-lg font-medium mb-4">{t.lengthSettings.title}</h2>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    checked={lengthSetting.type === 'threads'}
+                    onChange={() => setLengthSetting({ type: 'threads' })}
+                    className="form-radio"
+                  />
+                  <span>{t.lengthSettings.threads}</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    checked={lengthSetting.type === 'custom'}
+                    onChange={() => setLengthSetting({ 
+                      type: 'custom', 
+                      customValue: lengthSetting.customValue || THREADS_MAX_LENGTH 
+                    })}
+                    className="form-radio"
+                  />
+                  <span>{t.lengthSettings.custom}</span>
+                </label>
+                {lengthSetting.type === 'custom' && (
+                  <input
+                    type="number"
+                    value={lengthSetting.customValue || THREADS_MAX_LENGTH}
+                    onChange={(e) => setLengthSetting({
+                      type: 'custom',
+                      customValue: Math.max(1, parseInt(e.target.value) || THREADS_MAX_LENGTH)
+                    })}
+                    className="ml-6 w-24 px-2 py-1 border rounded"
+                    min="1"
+                  />
+                )}
+              </div>
+            </div>
 
-      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
-        {/* 長度設定區塊 */}
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700">{t.lengthSettings.title}</div>
-          <div className="space-y-2">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                checked={lengthSetting.type === 'threads'}
-                onChange={() => setLengthSetting({ type: 'threads' })}
-                className="form-radio"
-              />
-              <span>{t.lengthSettings.threads}</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                checked={lengthSetting.type === 'custom'}
-                onChange={() => setLengthSetting({ 
-                  type: 'custom', 
-                  customValue: lengthSetting.customValue || THREADS_MAX_LENGTH 
-                })}
-                className="form-radio"
-              />
-              <span>{t.lengthSettings.custom}</span>
-            </label>
-            {lengthSetting.type === 'custom' && (
-              <input
-                type="number"
-                value={lengthSetting.customValue || THREADS_MAX_LENGTH}
-                onChange={(e) => setLengthSetting({
-                  type: 'custom',
-                  customValue: Math.max(1, parseInt(e.target.value) || THREADS_MAX_LENGTH)
-                })}
-                className="ml-6 w-24 px-2 py-1 border rounded"
-                min="1"
-              />
-            )}
+            {/* 寬度設定 */}
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <h2 className="text-lg font-medium mb-4">{t.widthSettings.title}</h2>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    checked={widthSetting.type === 'threads'}
+                    onChange={() => setWidthSetting(prev => ({ 
+                      ...prev,
+                      type: 'threads'
+                    }))}
+                    className="form-radio"
+                  />
+                  <span>{t.widthSettings.threads}</span>
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    checked={widthSetting.type === 'custom'}
+                    onChange={() => setWidthSetting(prev => ({ 
+                      ...prev,
+                      type: 'custom'
+                    }))}
+                    className="form-radio"
+                  />
+                  <span>{t.widthSettings.custom}</span>
+                  <input
+                    type="number"
+                    value={widthSetting.customValue || THREADS_WIDTH}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setWidthSetting(prev => ({
+                        ...prev,
+                        type: 'custom',
+                        customValue: value === '' ? undefined : parseFloat(value)
+                      }));
+                    }}
+                    onBlur={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setWidthSetting(prev => ({
+                        ...prev,
+                        type: 'custom',
+                        customValue: Math.max(200, Math.min(1200, value || THREADS_WIDTH))
+                      }));
+                    }}
+                    onFocus={() => {
+                      if (widthSetting.type !== 'custom') {
+                        setWidthSetting(prev => ({
+                          ...prev,
+                          type: 'custom'
+                        }));
+                      }
+                    }}
+                    step="0.1"
+                    className="w-24 px-2 py-1 border rounded"
+                    min="200"
+                    max="1200"
+                  />
+                  <span className="text-sm text-gray-500">px</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 文字計算設定 */}
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <h2 className="text-lg font-medium mb-4">{t.options.textCalculation.title}</h2>
+              <div className="space-y-4">
+                {/* 參考連結選項 */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="removeReferences"
+                    checked={removeReferences}
+                    onChange={(e) => setRemoveReferences(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-blue-500"
+                  />
+                  <label htmlFor="removeReferences" className="text-sm text-gray-700 flex items-center space-x-2">
+                    <span>{t.options.removeReferences}</span>
+                    <div className="relative group">
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        {t.options.removeReferences_tooltip}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                          <div className="border-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                {/* CJK 字元計算選項 */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="countCJKAsTwo"
+                    checked={countCJKAsTwo}
+                    onChange={(e) => setCountCJKAsTwo(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-blue-500"
+                  />
+                  <label htmlFor="countCJKAsTwo" className="text-sm text-gray-700">
+                    {t.options.countCJKAsTwo}
+                  </label>
+                  <span className="text-sm text-gray-500 ml-2">
+                    {t.options.countCJKAsTwo_help}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 右欄 - 進階設定 */}
+          <div className="space-y-6">
+            {/* Markdown 轉換設定 */}
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium">{t.options.convertMarkdown}</h2>
+                <input
+                  type="checkbox"
+                  id="convertMarkdown"
+                  checked={convertMarkdown}
+                  onChange={(e) => setConvertMarkdown(e.target.checked)}
+                  className="form-checkbox h-4 w-4 text-blue-500"
+                />
+              </div>
+              {convertMarkdown && (
+                <div className="mt-4 space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">{t.options.markdownSettings.title}</h3>
+                    <button
+                      type="button"
+                      onClick={handleResetMarkdownSettings}
+                      className="text-sm text-blue-500 hover:text-blue-600"
+                    >
+                      {t.options.markdownSettings.reset}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Emoji settings */}
+                    {Object.entries(markdownSettings)
+                      .filter(([key]) => key !== 'headingNewline')
+                      .map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <label className="text-sm text-gray-600 flex-grow">
+                            {t.options.markdownSettings[key as keyof MarkdownSettings]}
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-500">→</span>
+                            <input
+                              type="text"
+                              value={value}
+                              onChange={(e) => setMarkdownSettings(prev => ({
+                                ...prev,
+                                [key]: e.target.value
+                              }))}
+                              className="w-20 px-2 py-1 border rounded"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                    {/* Heading newline setting */}
+                    <div className="flex items-center space-x-2 pt-2 border-t">
+                      <input
+                        type="checkbox"
+                        id="headingNewline"
+                        checked={markdownSettings.headingNewline}
+                        onChange={(e) => setMarkdownSettings(prev => ({
+                          ...prev,
+                          headingNewline: e.target.checked
+                        }))}
+                        className="form-checkbox h-4 w-4 text-blue-500"
+                      />
+                      <label htmlFor="headingNewline" className="text-sm text-gray-700">
+                        {t.options.markdownSettings.headingNewline}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 換頁符號設定 */}
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <h2 className="text-lg font-medium mb-4">{t.options.pageNumberSettings.title}</h2>
+              <div className="space-y-4">
+                {/* 格式設定 */}
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">
+                    {t.options.pageNumberSettings.format}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={pageNumberSettings.format}
+                      onChange={(e) => setPageNumberSettings(prev => ({
+                        ...prev,
+                        format: e.target.value
+                      }))}
+                      className="flex-1 px-2 py-1 border rounded"
+                    />
+                    <div className="text-sm text-gray-500">
+                      {t.options.pageNumberSettings.formatHelp}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 位置設定 */}
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">
+                    {t.options.pageNumberSettings.position}
+                  </label>
+                  <div className="space-x-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        checked={pageNumberSettings.position === 'top'}
+                        onChange={() => setPageNumberSettings(prev => ({
+                          ...prev,
+                          position: 'top'
+                        }))}
+                        className="form-radio"
+                      />
+                      <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.top}</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        checked={pageNumberSettings.position === 'bottom'}
+                        onChange={() => setPageNumberSettings(prev => ({
+                          ...prev,
+                          position: 'bottom'
+                        }))}
+                        className="form-radio"
+                      />
+                      <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.bottom}</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 換行符號數量設定 */}
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">
+                    {t.options.pageNumberSettings.newlineCount}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={pageNumberSettings.newlineCount}
+                    onChange={(e) => setPageNumberSettings(prev => ({
+                      ...prev,
+                      newlineCount: Math.max(1, Math.min(5, parseInt(e.target.value) || 2))
+                    }))}
+                    className="w-20 px-2 py-1 border rounded"
+                  />
+                </div>
+
+                {/* 預覽 */}
+                <div className="mt-2 text-sm text-gray-500">
+                  {t.options.pageNumberSettings.preview}: {generatePageNumber(1, 3)}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 文字輸入區域 */}
-        <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          className="w-full h-48 p-2 border rounded"
-          placeholder={t.input.placeholder}
-        />
-        <button
-          type="submit"
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {t.buttons.split}
-        </button>
+        {/* 文字輸入區域 - 跨越兩欄 */}
+        <div className="space-y-4">
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            className="w-full h-48 p-4 border rounded-lg shadow-sm"
+            placeholder={t.input.placeholder}
+          />
+          <button
+            type="submit"
+            className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            {t.buttons.split}
+          </button>
+        </div>
       </form>
 
       {/* 結果顯示區域 */}
       {segments.length > 0 && (
-        <div className="space-y-4">
+        <div 
+          className="space-y-4 mx-auto"
+          style={{ maxWidth: `${currentWidth}px` }}
+        >
           {segments.map((seg, idx) => (
             <SplitResult 
               key={idx} 
               text={seg} 
               translations={t}
+              index={idx}
+              countCJKAsTwo={countCJKAsTwo}
             />
           ))}
         </div>
