@@ -9,6 +9,7 @@ steps:
       - '--trust-builder'
       - '--env=GOOGLE_RUNTIME=nodejs'
       - '--env=NODE_ENV=production'
+      - '--env=NPM_CONFIG_PRODUCTION=false'
       - '--path=.'
 
   # 推送容器映像到 Container Registry
