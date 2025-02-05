@@ -6,6 +6,7 @@ steps:
       - 'build'
       - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
       - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--trust-builder'
       - '--path=.'
 
   # 推送容器映像到 Container Registry

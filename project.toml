@@ -7,7 +7,7 @@ name = "NPM_CONFIG_PRODUCTION"
 value = "true"
 
 [[build.buildpacks]]
-uri = "gcr.io/buildpacks/nodejs"
+uri = "gcr.io/buildpacks/builder:v1"
 
 [build]
 exclude = [
