@@ -1,12 +1,14 @@
 steps:
-  # 使用 Cloud Native Buildpacks 建置容器映像
+  # 使用 Google Cloud Buildpacks
   - name: 'gcr.io/k8s-skaffold/pack'
     entrypoint: 'pack'
     args:
       - 'build'
       - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
-      - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--builder=gcr.io/buildpacks/builder:latest'
       - '--trust-builder'
+      - '--env=GOOGLE_RUNTIME=nodejs'
+      - '--env=NODE_ENV=production'
       - '--path=.'
 
   # 推送容器映像到 Container Registry
