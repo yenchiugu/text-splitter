@@ -4,6 +4,7 @@ export const APP_INFO = {
   EMAIL: 'yenchiugu@gmail.com',
   SOCIAL: {
     THREADS: 'https://www.threads.net/@yenchiugu',
-    X: 'https://x.com/yenchiugu'
+    X: 'https://x.com/yenchiugu',
+    GITHUB: 'https://github.com/yenchiugu/text-splitter'
   }
 } as const; 
