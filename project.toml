@@ -1,0 +1,19 @@
+[[build.env]]
+name = "NODE_ENV"
+value = "production"
+
+[[build.env]]
+name = "NPM_CONFIG_PRODUCTION"
+value = "true"
+
+[[build.buildpacks]]
+uri = "gcr.io/buildpacks/nodejs"
+
+[build]
+exclude = [
+  ".git",
+  ".gitignore",
+  "README.md",
+  "*.test.js",
+  "*.spec.js"
+] 

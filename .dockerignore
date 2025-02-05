@@ -1,0 +1,23 @@
+# 版本控制
+.git
+.gitignore
+
+# 開發環境
+node_modules
+npm-debug.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 建置輸出
+.next
+out
+
+# IDE 設定
+.vscode
+.idea
+
+# 系統檔案
+.DS_Store
+Thumbs.db 
