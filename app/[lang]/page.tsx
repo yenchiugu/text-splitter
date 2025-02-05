@@ -4,6 +4,14 @@ import TextSplitter from '@/components/TextSplitter';
 import { VERSION, AUTHOR } from '../page';
 import Link from 'next/link';
 
+// 作者資訊常數
+const AUTHOR_INFO = {
+  name: 'Sam Ku',
+  email: 'yenchiugu@gmail.com',
+  threads: 'https://www.threads.net/@yenchiugu',
+  x: 'https://x.com/yenchiugu'
+};
+
 export default async function Home({ params: { lang } }: { params: { lang: Language } }) {
   const t: Translations = getTranslation(lang);
 
@@ -15,10 +23,38 @@ export default async function Home({ params: { lang } }: { params: { lang: Langu
           {/* 左側：標題和版本資訊 */}
           <div className="flex items-center space-x-8">
             <h1 className="text-2xl font-bold">{t.title}</h1>
-            <div className="text-sm text-gray-500 flex items-center space-x-4">
-              <div>{t.footer.version}: {VERSION}</div>
-              <div>•</div>
-              <div>{t.footer.author}: {AUTHOR}</div>
+            <div className="text-sm text-gray-500 flex items-center divide-x">
+              <div className="pr-4">{t.footer.version}: {VERSION}</div>
+              <div className="px-4">
+                {t.footer.author}: {AUTHOR_INFO.name}
+              </div>
+              <div className="pl-4 space-x-3">
+                <a 
+                  href={`mailto:${AUTHOR_INFO.email}`}
+                  className="text-gray-500 hover:text-gray-700"
+                  title={t.footer.email}
+                >
+                  ✉️
+                </a>
+                <a 
+                  href={AUTHOR_INFO.threads}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 hover:text-gray-700"
+                  title={t.footer.social.threads}
+                >
+                  📱
+                </a>
+                <a 
+                  href={AUTHOR_INFO.x}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 hover:text-gray-700"
+                  title={t.footer.social.x}
+                >
+                  𝕏
+                </a>
+              </div>
             </div>
           </div>
 

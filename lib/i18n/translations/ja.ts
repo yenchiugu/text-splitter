@@ -58,5 +58,10 @@ export const ja: Translations = {
   footer: {
     version: 'バージョン',
     author: '作者',
+    email: '作者にメール',
+    social: {
+      threads: 'Threadsでフォロー',
+      x: 'Xでフォロー',
+    },
   },
 }; 

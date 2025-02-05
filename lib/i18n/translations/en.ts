@@ -58,5 +58,10 @@ export const en: Translations = {
   footer: {
     version: 'Version',
     author: 'Author',
+    email: 'Email the author',
+    social: {
+      threads: 'Follow on Threads',
+      x: 'Follow on X',
+    },
   },
 }; 

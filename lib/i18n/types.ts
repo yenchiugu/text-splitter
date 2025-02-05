@@ -81,5 +81,10 @@ export interface Translations {
   footer: {
     version: string;
     author: string;
+    email: string;
+    social: {
+      threads: string;
+      x: string;
+    };
   };
 } 

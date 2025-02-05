@@ -58,5 +58,10 @@ export const zhCN: Translations = {
   footer: {
     version: '版本',
     author: '作者',
+    email: '发送邮件给作者',
+    social: {
+      threads: '在 Threads 上关注',
+      x: '在 X 上关注',
+    },
   },
 }; 

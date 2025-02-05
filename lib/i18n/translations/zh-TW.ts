@@ -58,5 +58,10 @@ export const zhTW: Translations = {
   footer: {
     version: '版本',
     author: '作者',
+    email: '寄信給作者',
+    social: {
+      threads: '在 Threads 上關注',
+      x: '在 X 上關注',
+    },
   },
 }; 
