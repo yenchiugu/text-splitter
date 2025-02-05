@@ -1,7 +1,10 @@
 import { Translations } from '../types';
 
 export const ja: Translations = {
-  title: 'ThreadSplitter - スマート投稿分割ツール',
+  title: 'テキスト分割ツール',
+  meta: {
+    description: 'SNS向けにテキストを分割するツール',
+  },
   lengthSettings: {
     title: '最大長設定',
     threads: 'Threads最大長（500文字）',
@@ -86,4 +89,4 @@ export const ja: Translations = {
       x: 'Xでフォロー',
     },
   },
-}; 
+} as const; 

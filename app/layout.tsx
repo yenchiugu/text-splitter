@@ -20,7 +20,14 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     // 如果有其他尺寸的圖示，也可以加在這裡
   },
-  sourceCode: APP_INFO.SOCIAL.GITHUB,
+  openGraph: {
+    type: 'website',
+    url: 'https://text-splitter-101940853523.asia-east1.run.app',
+    siteName: 'Text Splitter',
+  },
+  other: {
+    'github-repo': APP_INFO.SOCIAL.GITHUB,
+  },
 };
 
 export default function RootLayout({

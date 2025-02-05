@@ -16,10 +16,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   return {
     title: t.title,
-    description: t.description,  // 如果有的話
+    description: t.meta?.description || 'Split your text into segments for social media platforms',
     openGraph: {
       title: t.title,
-      description: t.description,  // 如果有的話
+      description: t.meta?.description || 'Split your text into segments for social media platforms',
     },
   };
 }

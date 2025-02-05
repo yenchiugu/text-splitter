@@ -47,6 +47,9 @@ export interface ListSymbols {
 
 export interface Translations {
   title: string;
+  meta?: {
+    description: string;
+  };
   lengthSettings: {
     title: string;
     threads: string;

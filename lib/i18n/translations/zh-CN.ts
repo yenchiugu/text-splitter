@@ -1,7 +1,10 @@
 import { Translations } from '../types';
 
 export const zhCN: Translations = {
-  title: 'ThreadSplitter - 智能长文分割工具',
+  title: '文字分割器',
+  meta: {
+    description: '将您的文字分割成适合社交媒体的片段',
+  },
   lengthSettings: {
     title: '最大长度设置',
     threads: 'Threads 最大长度（500字符）',
@@ -86,4 +89,4 @@ export const zhCN: Translations = {
       x: '在 X 上关注',
     },
   },
-}; 
+} as const; 

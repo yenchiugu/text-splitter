@@ -2,6 +2,9 @@ import { Translations } from '../types';
 
 export const en: Translations = {
   title: 'ThreadSplitter - Smart Thread Composer',
+  meta: {
+    description: 'Split your text into segments for social media platforms',
+  },
   lengthSettings: {
     title: 'Maximum Length Settings',
     threads: 'Threads Maximum Length (500 characters)',
@@ -86,4 +89,4 @@ export const en: Translations = {
       x: 'Follow on X',
     },
   },
-}; 
+} as const; 
