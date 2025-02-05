@@ -9,11 +9,10 @@ import { Translations } from '@/lib/i18n/types'
 interface SplitResultProps {
     text: string;
     translations: Translations;
-    index: number;
     countCJKAsTwo: boolean;
   }
   
-  export default function SplitResult({ text, translations: t, index, countCJKAsTwo }: SplitResultProps) {
+  export default function SplitResult({ text, translations: t, countCJKAsTwo }: SplitResultProps) {
     const [copied, setCopied] = useState(false);
     const [copyCount, setCopyCount] = useState(0);
   

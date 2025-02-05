@@ -7,7 +7,7 @@ export interface MarkdownSettings {
   headingNewline: boolean;
 }
 
-export interface PageNumberPosition = 'top' | 'bottom';
+export type PageNumberPosition = 'top' | 'bottom';
 
 export interface PageNumberSettings {
   format: string;

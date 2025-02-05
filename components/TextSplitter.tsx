@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Language, Translations, MarkdownSettings, PageNumberSettings, WidthType, WidthSetting } from '@/lib/i18n/types';
-import { getTranslation, getInitialLanguage, LANGUAGES } from '@/lib/i18n';
+import { useState } from 'react';
+import { MarkdownSettings, PageNumberSettings, WidthSetting, Translations } from '@/lib/i18n/types';
 import SplitResult from './SplitResult';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import EmojiPicker from 'emoji-picker-react';
@@ -17,8 +16,6 @@ interface LengthSetting {
   type: LengthType;
   customValue?: number;
 }
-
-const MAX_TOTAL = 500; // 每段總長度上限（包含前綴）
 
 // Define bracket pairs for text processing
 // These pairs will be used to ensure we don't split text within brackets
@@ -56,65 +53,6 @@ function isInsideBrackets(text: string, pos: number): boolean {
   return stack.length > 0;
 }
 
-/**
- * Finds a safe position to cut the text by looking backwards from allowedLen
- * Prioritizes line breaks, Chinese periods, and English periods
- * Ensures the cut position is not inside brackets
- * 
- * @param text - The text to analyze
- * @param allowedLen - Maximum allowed length for the segment
- * @returns number - The safe position to cut the text
- */
-function findSafeCut(text: string, allowedLen: number): number {
-  if (text.length <= allowedLen) return text.length;
-
-  for (let i = allowedLen; i > 0; i--) {
-    const char = text[i - 1];
-    if ((char === '\n' || char === '。' || char === '.') && !isInsideBrackets(text, i - 1)) {
-      return i;
-    }
-  }
-  // If no suitable cut point is found, cut at allowedLen
-  return allowedLen;
-}
-
-/**
- * Splits text into segments based on allowed length while preserving sentence integrity
- * 
- * @param text - The text to split
- * @param allowedLen - Maximum length for each segment (excluding prefix)
- * @returns string[] - Array of text segments
- */
-function splitSegments(text: string, allowedLen: number): string[] {
-  const segments: string[] = [];
-  let remaining = text.trim();
-
-  while (remaining.length > 0) {
-    if (remaining.length <= allowedLen) {
-      segments.push(remaining);
-      break;
-    }
-    const cutPos = findSafeCut(remaining, allowedLen);
-    const pos = cutPos > 0 ? cutPos : allowedLen;
-    segments.push(remaining.substring(0, pos).trim());
-    remaining = remaining.substring(pos).trim();
-  }
-  return segments;
-}
-
-/**
- * Calculates the length of the prefix "(n/m) " based on total segments
- * Formula: 4 + 2 * (number of digits in total)
- * Example: for 10 segments, prefix length = 4 + 2 * 2 = 8 ("(10/10) ")
- * 
- * @param total - Total number of segments
- * @returns number - Length of the prefix
- */
-function calcPrefixLength(total: number): number {
-  const digits = total.toString().length;
-  return 4 + 2 * digits;
-}
-
 // 修改 BULLET_OPTIONS 的順序，將 🔹 放在第一位
 const BULLET_OPTIONS = ['🔹', '•', '▪', '▫', '‣', '►', '▸', '➢', '➣'];
 
@@ -147,6 +85,10 @@ const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
   newlineCount: 2, // 預設兩個換行符號
 };
 
+interface TextSplitterProps {
+  translations: Translations;
+}
+
 /**
  * TextSplitter Component
  * A component that splits long text into segments while preserving:
@@ -160,7 +102,7 @@ const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
  * - Copy to clipboard functionality
  * - Character count display
  */
-export default function TextSplitter({ language, translations: t }: TextSplitterProps) {
+export default function TextSplitter({ translations: t }: TextSplitterProps) {
   const [inputText, setInputText] = useState('');
   const [segments, setSegments] = useState<string[]>([]);
   const [lengthSetting, setLengthSetting] = useState<LengthSetting>({
@@ -349,37 +291,35 @@ export default function TextSplitter({ language, translations: t }: TextSplitter
     let remaining = text.trim();
 
     while (remaining.length > 0) {
-      if (calculateLength(remaining, countCJKAsTwo) <= allowedLen) {
-        segments.push(remaining);
-        break;
-      }
-
-      let cutPos = 0;
-      let currentLength = 0;
-
-      // 向前搜尋適合的切割點
-      for (let i = 0; i < remaining.length; i++) {
-        const char = remaining[i];
-        const charLength = isCJKChar(char) && countCJKAsTwo ? 2 : 1;
-        
-        if (currentLength + charLength > allowedLen) break;
-        
-        currentLength += charLength;
-        if ((char === '\n' || char === '。' || char === '.') && !isInsideBrackets(remaining, i)) {
-          cutPos = i + 1;
-        }
-      }
-
-      // 如果沒找到合適的切割點，就在最大長度處切割
-      if (cutPos === 0) {
-        cutPos = Math.max(1, Math.floor(allowedLen / (countCJKAsTwo ? 1.5 : 1)));
-      }
-
+      const cutPos = findSafeCutWithCJK(remaining, allowedLen, countCJKAsTwo);
       segments.push(remaining.substring(0, cutPos).trim());
       remaining = remaining.substring(cutPos).trim();
     }
-
     return segments;
+  }
+
+  // 新增 findSafeCutWithCJK 函數來取代 findSafeCut
+  function findSafeCutWithCJK(text: string, allowedLen: number, countCJKAsTwo: boolean): number {
+    const currentLength = calculateLength(text, countCJKAsTwo);
+    if (currentLength <= allowedLen) return text.length;
+
+    let accumulatedLength = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      accumulatedLength += countCJKAsTwo && isCJKChar(char) ? 2 : 1;
+      
+      if (accumulatedLength > allowedLen) {
+        // 向後尋找合適的切割點
+        for (let j = i; j >= 0; j--) {
+          const char = text[j];
+          if ((char === '\n' || char === '。' || char === '.') && !isInsideBrackets(text, j)) {
+            return j + 1;
+          }
+        }
+        return i;
+      }
+    }
+    return text.length;
   }
 
   return (

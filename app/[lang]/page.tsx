@@ -1,4 +1,4 @@
-import { Translations, Language } from '@/lib/i18n/types';
+import { Language } from '@/lib/i18n/types';
 import { getTranslation, LANGUAGES } from '@/lib/i18n';
 import TextSplitter from '@/components/TextSplitter';
 import Link from 'next/link';
