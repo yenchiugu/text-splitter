@@ -9,12 +9,14 @@ export const en: Translations = {
     title: 'Maximum Length Settings',
     threads: 'Threads Maximum Length (500 characters)',
     custom: 'Custom Length',
+    none: 'No Split',
   },
   input: {
     placeholder: 'Enter the text to split...',
   },
   buttons: {
     split: 'Split Text',
+    convert: 'Convert Format',
     copy: 'Copy',
     copied: 'Copied',
   },
@@ -73,6 +75,12 @@ export const en: Translations = {
     countCJKAsTwo_help: '(for X.com/Twitter, not needed for Threads)',
     textCalculation: {
       title: 'Text Calculation Settings',
+    },
+    chineseConversion: {
+      title: 'Chinese Character Conversion',
+      none: 'No Conversion',
+      toTraditional: 'Convert to Traditional Chinese',
+      toSimplified: 'Convert to Simplified Chinese',
     },
   },
   widthSettings: {

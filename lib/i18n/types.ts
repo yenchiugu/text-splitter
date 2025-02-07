@@ -45,6 +45,8 @@ export interface ListSymbols {
   numberStyle: 'none' | 'circled' | 'parenthesized';
 }
 
+export type LengthType = 'threads' | 'custom' | 'none';
+
 export interface Translations {
   title: string;
   meta?: {
@@ -54,12 +56,14 @@ export interface Translations {
     title: string;
     threads: string;
     custom: string;
+    none: string;
   };
   input: {
     placeholder: string;
   };
   buttons: {
     split: string;
+    convert: string;
     copy: string;
     copied: string;
   };
@@ -118,6 +122,12 @@ export interface Translations {
     countCJKAsTwo_help: string;
     textCalculation: {
       title: string;
+    };
+    chineseConversion: {
+      title: string;
+      none: string;
+      toTraditional: string;
+      toSimplified: string;
     };
   };
   widthSettings: {

@@ -9,12 +9,14 @@ export const zhCN: Translations = {
     title: '最大长度设置',
     threads: 'Threads 最大长度（500字符）',
     custom: '自定义长度',
+    none: '不要分割',
   },
   input: {
     placeholder: '请输入要分割的文章...',
   },
   buttons: {
     split: '分割文章',
+    convert: '转换文章格式',
     copy: '复制',
     copied: '已复制',
   },
@@ -73,6 +75,12 @@ export const zhCN: Translations = {
     countCJKAsTwo_help: '(用于 X.com/Twitter，Threads 不需要)',
     textCalculation: {
       title: '文字计算设置',
+    },
+    chineseConversion: {
+      title: '中文转换',
+      none: '不转换',
+      toTraditional: '转换为繁体中文',
+      toSimplified: '转换为简体中文',
     },
   },
   widthSettings: {

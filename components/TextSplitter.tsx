@@ -11,12 +11,13 @@ import {
 import SplitResult from './SplitResult';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import EmojiPicker from 'emoji-picker-react';
+import { convertToSimplified, convertToTraditional } from '@/lib/utils/chineseConverter';
 
 // Maximum character limit for Threads platform
 const THREADS_MAX_LENGTH = 500;
 
 // Types for length settings
-type LengthType = 'threads' | 'custom';
+type LengthType = 'threads' | 'custom' | 'none';
 
 interface LengthSetting {
   type: LengthType;
@@ -33,31 +34,6 @@ const BRACKETS_PAIRS: [string, string][] = [
   ['(', ')'],  // Regular parentheses
   ['{', '}']   // Curly braces
 ];
-
-/**
- * Checks if a given position in text is inside any pair of brackets
- * Uses a stack-based algorithm to handle nested brackets
- * 
- * @param text - The input text to check
- * @param pos - The position to check
- * @returns boolean - True if position is inside brackets, false otherwise
- */
-function isInsideBrackets(text: string, pos: number): boolean {
-  const stack: string[] = [];
-  for (let i = 0; i <= pos; i++) {
-    const char = text[i];
-    for (const [open, close] of BRACKETS_PAIRS) {
-      if (char === open) {
-        stack.push(open);
-      } else if (char === close) {
-        if (stack.length > 0 && stack[stack.length - 1] === open) {
-          stack.pop();
-        }
-      }
-    }
-  }
-  return stack.length > 0;
-}
 
 // 修改 BULLET_OPTIONS 的順序，將 🔹 放在第一位
 const BULLET_OPTIONS = ['🔹', '•', '▪', '▫', '‣', '►', '▸', '➢', '➣'];
@@ -127,6 +103,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
   });
   const [countCJKAsTwo, setCountCJKAsTwo] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [chineseConversion, setChineseConversion] = useState<'none' | 'to-tw' | 'to-cn'>('none');
 
   // 計算當前寬度
   const currentWidth = widthSetting.type === 'threads' 
@@ -235,11 +212,16 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const maxLength = lengthSetting.type === 'threads' 
-      ? THREADS_MAX_LENGTH 
-      : lengthSetting.customValue || THREADS_MAX_LENGTH;
     
     let processedText = inputText;
+    
+    // 先進行中文轉換
+    if (chineseConversion === 'to-tw') {
+      processedText = convertToTraditional(processedText);
+    } else if (chineseConversion === 'to-cn') {
+      processedText = convertToSimplified(processedText);
+    }
+    
     if (removeReferences) {
       processedText = removeReferenceLinks(processedText);
     }
@@ -247,8 +229,18 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
       processedText = convertMarkdownToEmoji(processedText);
     }
     
-    const segs = splitArticle(processedText, maxLength);
-    setSegments(segs);
+    if (lengthSetting.type === 'none') {
+      // 不分割，直接設定為單一段落
+      setSegments([processedText]);
+    } else {
+      // 正常分割邏輯
+      const maxLength = lengthSetting.type === 'threads' 
+        ? THREADS_MAX_LENGTH 
+        : lengthSetting.customValue || THREADS_MAX_LENGTH;
+      
+      const segs = splitArticle(processedText, maxLength);
+      setSegments(segs);
+    }
   };
 
   const handleResetMarkdownSettings = () => {
@@ -332,6 +324,27 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
     return text.length;
   }
 
+  /**
+   * 檢查指定位置是否在括號內
+   * 使用堆疊算法處理巢狀括號
+   */
+  function isInsideBrackets(text: string, pos: number): boolean {
+    const stack: string[] = [];
+    for (let i = 0; i <= pos; i++) {
+      const char = text[i];
+      for (const [open, close] of BRACKETS_PAIRS) {
+        if (char === open) {
+          stack.push(open);
+        } else if (char === close) {
+          if (stack.length > 0 && stack[stack.length - 1] === open) {
+            stack.pop();
+          }
+        }
+      }
+    }
+    return stack.length > 0;
+  }
+
   return (
     <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -363,6 +376,15 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                     className="form-radio"
                   />
                   <span>{t.lengthSettings.custom}</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    checked={lengthSetting.type === 'none'}
+                    onChange={() => setLengthSetting({ type: 'none' })}
+                    className="form-radio"
+                  />
+                  <span>{t.lengthSettings.none}</span>
                 </label>
                 {lengthSetting.type === 'custom' && (
                   <input
@@ -484,6 +506,21 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
                   <span className="text-sm text-gray-500 ml-2">
                     {t.options.countCJKAsTwo_help}
                   </span>
+                </div>
+                {/* 中文轉換選項 */}
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600 block">
+                    {t.options.chineseConversion.title}
+                  </label>
+                  <select
+                    value={chineseConversion}
+                    onChange={(e) => setChineseConversion(e.target.value as typeof chineseConversion)}
+                    className="w-full px-2 py-1 border rounded"
+                  >
+                    <option value="none">{t.options.chineseConversion.none}</option>
+                    <option value="to-tw">{t.options.chineseConversion.toTraditional}</option>
+                    <option value="to-cn">{t.options.chineseConversion.toSimplified}</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -878,7 +915,7 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
             type="submit"
             className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            {t.buttons.split}
+            {lengthSetting.type === 'none' ? t.buttons.convert : t.buttons.split}
           </button>
         </div>
       </form>

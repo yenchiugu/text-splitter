@@ -9,12 +9,14 @@ export const ja: Translations = {
     title: '最大長設定',
     threads: 'Threads最大長（500文字）',
     custom: 'カスタム長',
+    none: '分割しない',
   },
   input: {
     placeholder: '分割したいテキストを入力してください...',
   },
   buttons: {
     split: 'テキストを分割',
+    convert: 'フォーマット変換',
     copy: 'コピー',
     copied: 'コピー済み',
   },
@@ -73,6 +75,12 @@ export const ja: Translations = {
     countCJKAsTwo_help: '(X.com/Twitter用、Threadsでは不要)',
     textCalculation: {
       title: 'テキスト計算設定',
+    },
+    chineseConversion: {
+      title: '中国語文字変換',
+      none: '変換なし',
+      toTraditional: '繁体字に変換',
+      toSimplified: '簡体字に変換',
     },
   },
   widthSettings: {
