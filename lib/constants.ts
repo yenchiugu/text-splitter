@@ -1,5 +1,5 @@
 export const APP_INFO = {
-  VERSION: '1.0.0',
+  VERSION: '1.1.0',
   AUTHOR: 'Sam Ku',
   EMAIL: 'yenchiugu@gmail.com',
   SOCIAL: {
