@@ -51,7 +51,7 @@ const DEFAULT_MARKDOWN_SETTINGS: MarkdownSettings = {
     h3: { left: '『', right: '』', useLeft: false },
   },
   emphasis: {
-    bold: { left: ' "', right: '"', useLeft: false },
+    bold: { left: '「', right: '」', useLeft: false },
     italic: { left: '`', right: '`', useLeft: true },
   },
   list: {
@@ -172,23 +172,22 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
       ? list.customBullet 
       : list.bullet;
 
-    result = result.replace(/^(\s*)[-*+] (.+)$/gm, (match, indent, content) => {
-      // 計算縮排層級（每兩個空格為一層）
-      const level = Math.floor(indent.length / 2);
-      // 根據層級添加縮排
-      const padding = '  '.repeat(level);
-      return `${padding}${bulletSymbol}${content}`;
+    // 修改正則表達式以捕獲前後的換行和縮排
+    result = result.replace(/(\n*)([ \t]*)[-*+] (.+?)(\n*)/g, (match, beforeNewlines, indent, content, afterNewlines) => {
+      // 保持前後的換行符號和縮排
+      const before = beforeNewlines || '';
+      const after = afterNewlines || '';
+      return `${before}${indent}${bulletSymbol}${content}${after}`;
     });
 
     // 有序列表（支援階層）
     if (list.numberStyle !== 'none') {
       const numbers = list.numberStyle === 'circled' ? CIRCLED_NUMBERS : PARENTHESIZED_NUMBERS;
-      result = result.replace(/^(\s*)(\d+)\. (.+)$/gm, (match, indent, num, content) => {
-        // 計算縮排層級
-        const level = Math.floor(indent.length / 2);
-        const padding = '  '.repeat(level);
+      result = result.replace(/(\n*)([ \t]*)(\d+)\. (.+?)(\n*)/g, (match, beforeNewlines, indent, num, content, afterNewlines) => {
         const index = parseInt(num) - 1;
-        return `${padding}${index < 10 ? numbers[index] : num + '.'} ${content}`;
+        const before = beforeNewlines || '';
+        const after = afterNewlines || '';
+        return `${before}${indent}${index < 10 ? numbers[index] : num + '.'} ${content}${after}`;
       });
     }
     
@@ -287,26 +286,39 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
     });
   }
 
-  // 新增考慮 CJK 的分割函數
+  // 修改 splitSegmentsWithCJK 函數
   function splitSegmentsWithCJK(text: string, allowedLen: number): string[] {
     const segments: string[] = [];
-    let remaining = text.trim();
+    // 移除 trim()，保留原始格式
+    let remaining = text;
 
     while (remaining.length > 0) {
       const cutPos = findSafeCutWithCJK(remaining, allowedLen, countCJKAsTwo);
-      segments.push(remaining.substring(0, cutPos).trim());
-      remaining = remaining.substring(cutPos).trim();
+      // 不使用 trim()，保留空白
+      segments.push(remaining.substring(0, cutPos));
+      // 不使用 trim()，保留空白
+      remaining = remaining.substring(cutPos);
     }
     return segments;
   }
 
-  // 新增 findSafeCutWithCJK 函數來取代 findSafeCut
+  // 修改 findSafeCutWithCJK 函數
   function findSafeCutWithCJK(text: string, allowedLen: number, countCJKAsTwo: boolean): number {
     const currentLength = calculateLength(text, countCJKAsTwo);
     if (currentLength <= allowedLen) return text.length;
 
     let accumulatedLength = 0;
-    for (let i = 0; i < text.length; i++) {
+    let lastSafePos = 0;
+    
+    // 保留開頭的空白字符
+    let i = 0;
+    while (i < text.length && (text[i] === ' ' || text[i] === '\t')) {
+      i++;
+    }
+    // 將空白字符的長度加入累計
+    accumulatedLength = i;
+
+    for (; i < text.length; i++) {
       const char = text[i];
       accumulatedLength += countCJKAsTwo && isCJKChar(char) ? 2 : 1;
       
@@ -318,7 +330,12 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
             return j + 1;
           }
         }
-        return i;
+        return lastSafePos || i;
+      }
+      
+      // 更新最後的安全切割點
+      if (char === '\n' || char === '。' || char === '.') {
+        lastSafePos = i + 1;
       }
     }
     return text.length;
