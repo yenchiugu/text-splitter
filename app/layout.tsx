@@ -10,7 +10,6 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://text-splitter-101940853523.asia-east1.run.app'),
   applicationName: 'ThreadCraft',
   title: {
     template: '%s | ThreadCraft',
@@ -34,7 +33,6 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: 'https://text-splitter-101940853523.asia-east1.run.app',
     siteName: 'Text Splitter',
     title: 'Text Splitter - Social Media Text Splitter Tool',
     description: 'Free tool to split long text into segments for social media platforms. Supports Markdown and CJK characters.',

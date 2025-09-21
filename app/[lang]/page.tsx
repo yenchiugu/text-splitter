@@ -4,6 +4,7 @@ import TextSplitter from '@/components/TextSplitter';
 import Link from 'next/link';
 import { APP_INFO } from '@/lib/constants';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 
 interface PageProps {
   params: Promise<{ lang: Language }>;
@@ -13,15 +14,21 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
   const t = await getTranslation(lang);
-  
+
   const title = t.title;
   const description = t.meta?.description;
-  
+
+  // 動態獲取當前網域
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const baseUrl = `${protocol}://${host}`;
+
   return {
     title,
     description,
     alternates: {
-      canonical: `https://text-splitter-101940853523.asia-east1.run.app/${lang}`,
+      canonical: `${baseUrl}/${lang}`,
       languages: {
         'en': '/en',
         'zh-TW': '/zh-TW',
