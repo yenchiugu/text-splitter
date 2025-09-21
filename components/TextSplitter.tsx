@@ -113,8 +113,12 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
   // 移除參考連結的函數
   const removeReferenceLinks = (text: string): string => {
     if (!removeReferences) return text;
+    let result = text;
     // 移除格式為 ([文字](URL)) 的參考連結
-    return text.replace(/\(\[[^\]]*\]\([^)]*\)\)/g, '');
+    result = result.replace(/\(\[[^\]]*\]\([^)]*\)\)/g, '');
+    // 移除獨立的 URL 行（換行 + URL + 換行）
+    result = result.replace(/\n([a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,})\n/g, '');
+    return result;
   };
 
   // Markdown 轉換函數
@@ -172,22 +176,20 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
       ? list.customBullet 
       : list.bullet;
 
-    // 修改正則表達式以捕獲前後的換行和縮排
-    result = result.replace(/(\n*)([ \t]*)[-*+] (.+?)(\n*)/g, (match, beforeNewlines, indent, content, afterNewlines) => {
+    // 只匹配行首的列表項目，避免匹配表格中的內容
+    result = result.replace(/^([ \t]*)([-*+]) (.+?)(\n|$)/gm, (match, indent, listMarker, content, afterNewlines) => {
       // 保持前後的換行符號和縮排
-      const before = beforeNewlines || '';
       const after = afterNewlines || '';
-      return `${before}${indent}${bulletSymbol}${content}${after}`;
+      return `${indent}${bulletSymbol}${content}${after}`;
     });
 
-    // 有序列表（支援階層）
+    // 有序列表（支援階層），只匹配行首的項目
     if (list.numberStyle !== 'none') {
       const numbers = list.numberStyle === 'circled' ? CIRCLED_NUMBERS : PARENTHESIZED_NUMBERS;
-      result = result.replace(/(\n*)([ \t]*)(\d+)\. (.+?)(\n*)/g, (match, beforeNewlines, indent, num, content, afterNewlines) => {
+      result = result.replace(/^([ \t]*)(\d+)\. (.+?)(\n|$)/gm, (match, indent, num, content, afterNewlines) => {
         const index = parseInt(num) - 1;
-        const before = beforeNewlines || '';
         const after = afterNewlines || '';
-        return `${before}${indent}${index < 10 ? numbers[index] : num + '.'} ${content}${after}`;
+        return `${indent}${index < 10 ? numbers[index] : num + '.'} ${content}${after}`;
       });
     }
     
