@@ -61,6 +61,7 @@ export const ja: Translations = {
     },
     pageNumberSettings: {
       title: 'ページ番号設定',
+      enable: 'ページ番号を表示',
       format: '書式（n は現在のページ、m は総ページ数）',
       position: '位置',
       positions: {

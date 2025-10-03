@@ -61,6 +61,7 @@ export const zhCN: Translations = {
     },
     pageNumberSettings: {
       title: '分页符号设置',
+      enable: '显示分页符号',
       format: '格式（使用 n 表示当前页码，m 表示总页数）',
       position: '位置',
       positions: {

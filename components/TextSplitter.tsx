@@ -62,6 +62,7 @@ const DEFAULT_MARKDOWN_SETTINGS: MarkdownSettings = {
 };
 
 const DEFAULT_PAGE_NUMBER_SETTINGS: PageNumberSettings = {
+  enabled: false,
   format: 'Page (n/m)',
   position: 'bottom',
   newlineCount: 2, // 預設兩個換行符號
@@ -198,17 +199,41 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
 
   // 計算換頁符號的實際長度
   const getPageNumberLength = (total: number, current: number): number => {
-    return pageNumberSettings.format
-      .replace('n', current.toString())
-      .replace('m', total.toString())
-      .length + pageNumberSettings.newlineCount; // 加上換行符的長度
+    if (!pageNumberSettings.enabled) {
+      return 0;
+    }
+
+    return (
+      pageNumberSettings.format
+        .replace('n', current.toString())
+        .replace('m', total.toString()).length + pageNumberSettings.newlineCount
+    );
   };
 
   // 生成換頁符號
   const generatePageNumber = (current: number, total: number): string => {
+    if (!pageNumberSettings.enabled) {
+      return '';
+    }
+
     return pageNumberSettings.format
       .replace('n', current.toString())
       .replace('m', total.toString());
+  };
+
+  const applyPageNumbers = (segments: string[]): string[] => {
+    if (!pageNumberSettings.enabled) {
+      return segments;
+    }
+
+    return segments.map((seg, idx) => {
+      const pageNum = generatePageNumber(idx + 1, segments.length);
+      const newlines = '\n'.repeat(pageNumberSettings.newlineCount);
+
+      return pageNumberSettings.position === 'top'
+        ? `${pageNum}${newlines}${seg}`
+        : `${seg}${newlines}${pageNum}`;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -264,28 +289,25 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
 
   // 修改 splitArticle 函數
   function splitArticle(text: string, maxLength: number): string[] {
-    if (calculateLength(text, countCJKAsTwo) <= maxLength) return [text];
+    if (calculateLength(text, countCJKAsTwo) <= maxLength) {
+      return applyPageNumbers([text]);
+    }
 
     // 初步分割，考慮最大換頁符號長度
     const maxPageNumLen = getPageNumberLength(99, 99);
-    let allowedLen = maxLength - maxPageNumLen;
-    let segments = splitSegmentsWithCJK(text, allowedLen);
+    const allowedLenBase = pageNumberSettings.enabled ? maxLength - maxPageNumLen : maxLength;
+    let segments = splitSegmentsWithCJK(text, allowedLenBase);
 
-    // 根據實際頁數重新計算
-    const actualPageNumLen = getPageNumberLength(segments.length, segments.length);
-    if (actualPageNumLen !== maxPageNumLen) {
-      allowedLen = maxLength - actualPageNumLen;
-      segments = splitSegmentsWithCJK(text, allowedLen);
+    if (pageNumberSettings.enabled) {
+      // 根據實際頁數重新計算
+      const actualPageNumLen = getPageNumberLength(segments.length, segments.length);
+      if (actualPageNumLen !== maxPageNumLen) {
+        const recalculatedAllowedLen = maxLength - actualPageNumLen;
+        segments = splitSegmentsWithCJK(text, recalculatedAllowedLen);
+      }
     }
 
-    // 加入換頁符號
-    return segments.map((seg, idx) => {
-      const pageNum = generatePageNumber(idx + 1, segments.length);
-      const newlines = '\n'.repeat(pageNumberSettings.newlineCount);
-      return pageNumberSettings.position === 'top'
-        ? `${pageNum}${newlines}${seg}`
-        : `${seg}${newlines}${pageNum}`;
-    });
+    return applyPageNumbers(segments);
   }
 
   // 修改 splitSegmentsWithCJK 函數
@@ -841,82 +863,98 @@ export default function TextSplitter({ translations: t }: TextSplitterProps) {
             <div className="bg-white p-4 rounded-lg border shadow-sm">
               <h2 className="text-lg font-medium mb-4">{t.options.pageNumberSettings.title}</h2>
               <div className="space-y-4">
-                {/* 格式設定 */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    {t.options.pageNumberSettings.format}
-                  </label>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm text-gray-600 block mb-1">
+                      {t.options.pageNumberSettings.enable}
+                    </label>
                     <input
-                      type="text"
-                      value={pageNumberSettings.format}
+                      type="checkbox"
+                      checked={pageNumberSettings.enabled}
                       onChange={(e) => setPageNumberSettings(prev => ({
                         ...prev,
-                        format: e.target.value
+                        enabled: e.target.checked,
                       }))}
-                      className="flex-1 px-2 py-1 border rounded"
+                      className="form-checkbox h-4 w-4 text-blue-500"
                     />
-                    <div className="text-sm text-gray-500">
-                      {t.options.pageNumberSettings.formatHelp}
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-1">
+                      {t.options.pageNumberSettings.format}
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={pageNumberSettings.format}
+                        onChange={(e) => setPageNumberSettings(prev => ({
+                          ...prev,
+                          format: e.target.value
+                        }))}
+                        className="flex-1 px-2 py-1 border rounded disabled:bg-gray-100"
+                        disabled={!pageNumberSettings.enabled}
+                      />
+                      <div className="text-sm text-gray-500">
+                        {t.options.pageNumberSettings.formatHelp}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* 位置設定 */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    {t.options.pageNumberSettings.position}
-                  </label>
-                  <div className="space-x-4">
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        checked={pageNumberSettings.position === 'top'}
-                        onChange={() => setPageNumberSettings(prev => ({
-                          ...prev,
-                          position: 'top'
-                        }))}
-                        className="form-radio"
-                      />
-                      <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.top}</span>
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-1">
+                      {t.options.pageNumberSettings.position}
                     </label>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        checked={pageNumberSettings.position === 'bottom'}
-                        onChange={() => setPageNumberSettings(prev => ({
-                          ...prev,
-                          position: 'bottom'
-                        }))}
-                        className="form-radio"
-                      />
-                      <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.bottom}</span>
-                    </label>
+                    <div className="space-x-4">
+                      <label className={"inline-flex items-center " + (!pageNumberSettings.enabled ? 'opacity-50' : '')}>
+                        <input
+                          type="radio"
+                          checked={pageNumberSettings.position === 'top'}
+                          onChange={() => setPageNumberSettings(prev => ({
+                            ...prev,
+                            position: 'top'
+                          }))}
+                          className="form-radio"
+                          disabled={!pageNumberSettings.enabled}
+                        />
+                        <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.top}</span>
+                      </label>
+                      <label className={"inline-flex items-center " + (!pageNumberSettings.enabled ? 'opacity-50' : '')}>
+                        <input
+                          type="radio"
+                          checked={pageNumberSettings.position === 'bottom'}
+                          onChange={() => setPageNumberSettings(prev => ({
+                            ...prev,
+                            position: 'bottom'
+                          }))}
+                          className="form-radio"
+                          disabled={!pageNumberSettings.enabled}
+                        />
+                        <span className="ml-2 text-sm">{t.options.pageNumberSettings.positions.bottom}</span>
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                {/* 換行符號數量設定 */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    {t.options.pageNumberSettings.newlineCount}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={pageNumberSettings.newlineCount}
-                    onChange={(e) => setPageNumberSettings(prev => ({
-                      ...prev,
-                      newlineCount: Math.max(1, Math.min(5, parseInt(e.target.value) || 2))
-                    }))}
-                    className="w-20 px-2 py-1 border rounded"
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-1">
+                      {t.options.pageNumberSettings.newlineCount}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={pageNumberSettings.newlineCount}
+                      onChange={(e) => setPageNumberSettings(prev => ({
+                        ...prev,
+                        newlineCount: Math.max(1, Math.min(5, parseInt(e.target.value) || 2))
+                      }))}
+                      className="w-20 px-2 py-1 border rounded disabled:bg-gray-100"
+                      disabled={!pageNumberSettings.enabled}
+                    />
+                  </div>
 
-                {/* 預覽 */}
-                <div className="mt-2 text-sm text-gray-500">
-                  {t.options.pageNumberSettings.preview}: {generatePageNumber(1, 3)}
-                </div>
+                  <div className="mt-2 text-sm text-gray-500">
+                    {t.options.pageNumberSettings.preview}: {generatePageNumber(1, 3) || '-'}
+                  </div>
+
               </div>
             </div>
           </div>

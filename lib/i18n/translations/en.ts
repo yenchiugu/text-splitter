@@ -61,6 +61,7 @@ export const en: Translations = {
     },
     pageNumberSettings: {
       title: 'Page Number Settings',
+      enable: 'Show page numbers',
       format: 'Format (use n for current page, m for total pages)',
       position: 'Position',
       positions: {

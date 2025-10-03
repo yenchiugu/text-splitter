@@ -10,6 +10,7 @@ export interface MarkdownSettings {
 export type PageNumberPosition = 'top' | 'bottom';
 
 export interface PageNumberSettings {
+  enabled: boolean;
   format: string;
   position: PageNumberPosition;
   newlineCount: number;
@@ -108,6 +109,7 @@ export interface Translations {
     };
     pageNumberSettings: {
       title: string;
+      enable: string;
       format: string;
       position: string;
       positions: {

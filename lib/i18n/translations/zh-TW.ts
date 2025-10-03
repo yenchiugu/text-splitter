@@ -61,6 +61,7 @@ export const zhTW: Translations = {
     },
     pageNumberSettings: {
       title: '換頁符號設定',
+      enable: '顯示換頁符號',
       format: '格式（使用 n 表示當前頁碼，m 表示總頁數）',
       position: '位置',
       positions: {
